@@ -15,7 +15,24 @@ export const fetchLeads = async (crmType: string): Promise<Lead[]> => {
       throw error;
     }
     
-    return data || [];
+    // Transform the database leads to match the Lead type
+    const transformedLeads: Lead[] = data.map(lead => ({
+      id: lead.id,
+      name: lead.name,
+      phone: lead.phone,
+      email: lead.email,
+      address: lead.address,
+      type: lead.type as "individual" | "business" | "referral",
+      status: lead.status as "answered" | "busy" | "not-interested" | "call-later" | "pending" | "converted",
+      assignedTo: lead.assigned_to,
+      createdAt: lead.created_at,
+      lastContact: lead.last_contact,
+      followUp: lead.follow_up,
+      notes: lead.notes,
+      crm_type: lead.crm_type
+    }));
+    
+    return transformedLeads;
   } catch (error) {
     console.error("Failed to fetch leads:", error);
     return [];
@@ -36,7 +53,26 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
       throw error;
     }
     
-    return data;
+    if (!data) return null;
+    
+    // Transform the database lead to match the Lead type
+    const transformedLead: Lead = {
+      id: data.id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      address: data.address,
+      type: data.type as "individual" | "business" | "referral",
+      status: data.status as "answered" | "busy" | "not-interested" | "call-later" | "pending" | "converted",
+      assignedTo: data.assigned_to,
+      createdAt: data.created_at,
+      lastContact: data.last_contact,
+      followUp: data.follow_up,
+      notes: data.notes,
+      crm_type: data.crm_type
+    };
+    
+    return transformedLead;
   } catch (error) {
     console.error("Failed to fetch lead:", error);
     return null;
@@ -45,10 +81,25 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
 
 // Create a new lead
 export const createLead = async (lead: Omit<Lead, "id" | "createdAt">): Promise<Lead | null> => {
+  // Transform the Lead type to match the database schema
+  const dbLead = {
+    name: lead.name,
+    phone: lead.phone,
+    email: lead.email,
+    address: lead.address,
+    type: lead.type,
+    status: lead.status,
+    assigned_to: lead.assignedTo,
+    last_contact: lead.lastContact,
+    follow_up: lead.followUp,
+    notes: lead.notes,
+    crm_type: lead.crm_type
+  };
+  
   try {
     const { data, error } = await supabase
       .from("leads")
-      .insert([lead])
+      .insert([dbLead])
       .select()
       .single();
     
@@ -57,7 +108,24 @@ export const createLead = async (lead: Omit<Lead, "id" | "createdAt">): Promise<
       throw error;
     }
     
-    return data;
+    // Transform the database lead to match the Lead type
+    const transformedLead: Lead = {
+      id: data.id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      address: data.address,
+      type: data.type as "individual" | "business" | "referral",
+      status: data.status as "answered" | "busy" | "not-interested" | "call-later" | "pending" | "converted",
+      assignedTo: data.assigned_to,
+      createdAt: data.created_at,
+      lastContact: data.last_contact,
+      followUp: data.follow_up,
+      notes: data.notes,
+      crm_type: data.crm_type
+    };
+    
+    return transformedLead;
   } catch (error) {
     console.error("Failed to create lead:", error);
     return null;
@@ -66,10 +134,24 @@ export const createLead = async (lead: Omit<Lead, "id" | "createdAt">): Promise<
 
 // Update an existing lead
 export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead | null> => {
+  // Transform the Lead type to match the database schema
+  const dbLead: any = {};
+  if (lead.name) dbLead.name = lead.name;
+  if (lead.phone) dbLead.phone = lead.phone;
+  if (lead.email) dbLead.email = lead.email;
+  if (lead.address) dbLead.address = lead.address;
+  if (lead.type) dbLead.type = lead.type;
+  if (lead.status) dbLead.status = lead.status;
+  if (lead.assignedTo) dbLead.assigned_to = lead.assignedTo;
+  if (lead.lastContact) dbLead.last_contact = lead.lastContact;
+  if (lead.followUp) dbLead.follow_up = lead.followUp;
+  if (lead.notes) dbLead.notes = lead.notes;
+  if (lead.crm_type) dbLead.crm_type = lead.crm_type;
+  
   try {
     const { data, error } = await supabase
       .from("leads")
-      .update(lead)
+      .update(dbLead)
       .eq("id", id)
       .select()
       .single();
@@ -79,7 +161,24 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
       throw error;
     }
     
-    return data;
+    // Transform the database lead to match the Lead type
+    const transformedLead: Lead = {
+      id: data.id,
+      name: data.name,
+      phone: data.phone,
+      email: data.email,
+      address: data.address,
+      type: data.type as "individual" | "business" | "referral",
+      status: data.status as "answered" | "busy" | "not-interested" | "call-later" | "pending" | "converted",
+      assignedTo: data.assigned_to,
+      createdAt: data.created_at,
+      lastContact: data.last_contact,
+      followUp: data.follow_up,
+      notes: data.notes,
+      crm_type: data.crm_type
+    };
+    
+    return transformedLead;
   } catch (error) {
     console.error("Failed to update lead:", error);
     return null;

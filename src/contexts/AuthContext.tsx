@@ -69,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from("users")
         .select("*")
         .eq("email", email)
+        .eq("password", password) // Added check for password
         .maybeSingle();
 
       console.log("Login query result:", data, error);
@@ -82,14 +83,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (!data) {
-        return { 
-          success: false, 
-          message: "Invalid email or password" 
-        };
-      }
-
-      // In a real app, you'd verify the password hash - here we just compare as plaintext
-      if (data.password !== password) {
         return { 
           success: false, 
           message: "Invalid email or password" 
