@@ -62,14 +62,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
+      console.log("Attempting login with:", email, "and selected CRM:", selectedCrmType);
+
+      // Query the users table directly without using .single() to avoid errors when no result is found
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .eq("email", email)
-        .single();
+        .maybeSingle();
 
-      if (error || !data) {
+      console.log("Login query result:", data, error);
+
+      if (error) {
         console.error("Login error:", error);
+        return { 
+          success: false, 
+          message: "Error connecting to the database" 
+        };
+      }
+
+      if (!data) {
         return { 
           success: false, 
           message: "Invalid email or password" 
