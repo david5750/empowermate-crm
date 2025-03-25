@@ -8,7 +8,16 @@ interface LeadStatusChartProps {
 
 const COLORS = ["#10B981", "#FBBF24", "#EF4444", "#3B82F6", "#8B5CF6"];
 
-export const LeadStatusChart = ({ data }: LeadStatusChartProps) => {
+export const LeadStatusChart = ({ data = [] }: LeadStatusChartProps) => {
+  // Ensure we have data to display
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <p className="text-muted-foreground">No lead status data available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[300px] w-full mt-4">
       <ResponsiveContainer width="100%" height="100%">

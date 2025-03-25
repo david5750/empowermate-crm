@@ -10,7 +10,7 @@ import Auth from "./pages/Auth";
 import Leads from "./pages/Leads";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
-import { CrmSelection } from "./components/crm/CrmSelection";
+import SelectCrm from "./pages/SelectCrm";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +40,7 @@ const App = () => {
               path="/" 
               element={isAuthenticated ? <Index /> : <Navigate to="/select-crm" />} 
             />
-            <Route path="/select-crm" element={<SelectCrmPage />} />
+            <Route path="/select-crm" element={<SelectCrm />} />
             <Route path="/auth" element={<Auth />} />
             <Route 
               path="/leads" 
@@ -56,24 +56,6 @@ const App = () => {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
-  );
-};
-
-const SelectCrmPage = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    setIsAuthenticated(localStorage.getItem("isLoggedIn") === "true");
-  }, []);
-
-  if (isAuthenticated) {
-    return <Navigate to="/" />;
-  }
-
-  return (
-    <div className="min-h-screen">
-      <CrmSelection />
-    </div>
   );
 };
 

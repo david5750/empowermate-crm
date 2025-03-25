@@ -5,6 +5,7 @@ import { ArrowUpRight, Calendar, Phone, UserRound, Users } from "lucide-react";
 import { RecentLeads } from "./RecentLeads";
 import { LeadStatusChart } from "./LeadStatusChart";
 import { PerformanceChart } from "./PerformanceChart";
+import { leadStatusDistribution, performanceData } from "@/utils/mockData";
 
 export const Dashboard = () => {
   // Stats data
@@ -72,7 +73,7 @@ export const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
-            <PerformanceChart />
+            <PerformanceChart data={performanceData} />
           </CardContent>
         </Card>
         <Card className="col-span-3">
@@ -83,7 +84,7 @@ export const Dashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <LeadStatusChart />
+            <LeadStatusChart data={leadStatusDistribution} />
           </CardContent>
         </Card>
       </div>

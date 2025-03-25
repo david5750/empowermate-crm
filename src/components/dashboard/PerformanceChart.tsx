@@ -11,7 +11,16 @@ interface PerformanceChartProps {
   }[];
 }
 
-export const PerformanceChart = ({ data }: PerformanceChartProps) => {
+export const PerformanceChart = ({ data = [] }: PerformanceChartProps) => {
+  // Ensure we have data to display
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-[300px] w-full flex items-center justify-center">
+        <p className="text-muted-foreground">No performance data available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[300px] w-full mt-4">
       <ResponsiveContainer width="100%" height="100%">
