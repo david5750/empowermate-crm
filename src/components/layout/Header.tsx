@@ -1,8 +1,11 @@
 
 import React, { useState } from "react";
-import { Bell, ChevronDown, Search, User } from "lucide-react";
+import { Bell, ChevronDown, Search, LogOut, User } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "../shared/Button";
+import { Button } from "../ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 interface HeaderProps {
   className?: string;
@@ -11,6 +14,8 @@ interface HeaderProps {
 export const Header = ({ className }: HeaderProps) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   
   // Mock notifications
   const notifications = [
@@ -19,10 +24,21 @@ export const Header = ({ className }: HeaderProps) => {
     { id: 3, text: "Meeting scheduled with client", time: "3 hours ago" },
   ];
 
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Logged out successfully");
+    navigate("/select-crm");
+    setShowUserMenu(false);
+  };
+
   return (
     <header className={cn("h-16 flex items-center justify-between px-6 border-b glassmorphism", className)}>
       <div className="flex items-center gap-4">
-        <h2 className="text-lg font-medium">Employee CRM Panel</h2>
+        <h2 className="text-lg font-medium">
+          {user?.crm_type 
+            ? `${user.crm_type.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('/')} CRM`
+            : 'Employee CRM Panel'}
+        </h2>
         
         <div className="hidden md:flex relative ml-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -77,7 +93,9 @@ export const Header = ({ className }: HeaderProps) => {
               <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                 <User className="h-4 w-4" />
               </div>
-              <span className="hidden md:inline-block">John Smith</span>
+              <span className="hidden md:inline-block">
+                {user ? `${user.first_name} ${user.last_name}` : 'Guest'}
+              </span>
             </div>
             <ChevronDown className="h-4 w-4" />
           </Button>
@@ -85,24 +103,27 @@ export const Header = ({ className }: HeaderProps) => {
           {showUserMenu && (
             <div className="absolute right-0 mt-2 w-48 rounded-md border border-border bg-card shadow-lg animate-fade-in z-50">
               <div className="p-2">
-                <a
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors"
-                >
-                  Profile
-                </a>
-                <a
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors"
-                >
-                  Settings
-                </a>
-                <a
-                  href="#"
-                  className="block rounded-md px-3 py-2 text-sm hover:bg-muted transition-colors text-destructive"
-                >
-                  Logout
-                </a>
+                {user && (
+                  <>
+                    <div className="block rounded-md px-3 py-2 text-sm font-medium border-b mb-1">
+                      {user.email}
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="block rounded-md px-3 py-2 text-sm w-full text-left hover:bg-muted transition-colors text-destructive"
+                    >
+                      Logout
+                    </button>
+                  </>
+                )}
+                {!user && (
+                  <button
+                    onClick={() => navigate("/select-crm")}
+                    className="block rounded-md px-3 py-2 text-sm w-full text-left hover:bg-muted transition-colors"
+                  >
+                    Login
+                  </button>
+                )}
               </div>
             </div>
           )}
