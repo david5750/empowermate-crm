@@ -64,12 +64,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       console.log("Attempting login with:", email, "and selected CRM:", selectedCrmType);
 
-      // Query the users table directly without using .single() to avoid errors when no result is found
+      // Query the users table directly using maybeSingle instead of single
       const { data, error } = await supabase
         .from("users")
         .select("*")
         .eq("email", email)
-        .eq("password", password) // Added check for password
         .maybeSingle();
 
       console.log("Login query result:", data, error);
@@ -86,6 +85,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { 
           success: false, 
           message: "Invalid email or password" 
+        };
+      }
+
+      // Verify password manually since we're storing it directly in the table
+      if (data.password !== password) {
+        return {
+          success: false,
+          message: "Invalid email or password"
         };
       }
 
