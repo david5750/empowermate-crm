@@ -1,4 +1,3 @@
-
 export type Lead = {
   id: string;
   name: string;
@@ -12,6 +11,7 @@ export type Lead = {
   lastContact: string;
   followUp: string | null;
   notes: string[];
+  crm_type: string; // Added this property
 };
 
 export type Client = Lead & {
@@ -56,6 +56,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-20T14:15:00Z",
     followUp: "2023-10-05T11:00:00Z",
     notes: ["Interested in premium package", "Requested brochure"],
+    crm_type: "real-estate",
   },
   {
     id: "L1002",
@@ -70,6 +71,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-22T16:30:00Z",
     followUp: "2023-10-01T10:00:00Z",
     notes: ["Referred by John Smith", "Call back next week"],
+    crm_type: "insurance",
   },
   {
     id: "L1003",
@@ -84,6 +86,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-18T11:00:00Z",
     followUp: null,
     notes: ["Busy when called", "Try again in the afternoon"],
+    crm_type: "real-estate",
   },
   {
     id: "L1004",
@@ -98,6 +101,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-23T10:20:00Z",
     followUp: null,
     notes: ["Not interested at this time", "Check back in 3 months"],
+    crm_type: "insurance",
   },
   {
     id: "L1005",
@@ -112,6 +116,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-25T15:45:00Z",
     followUp: null,
     notes: ["Successfully converted to client", "Purchased premium package"],
+    crm_type: "real-estate",
   },
   {
     id: "L1006",
@@ -126,6 +131,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-20T16:45:00Z",
     followUp: "2023-10-02T13:30:00Z",
     notes: ["Initial contact made", "Scheduled follow-up call"],
+    crm_type: "insurance",
   },
   {
     id: "L1007",
@@ -140,6 +146,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-24T11:30:00Z",
     followUp: "2023-10-10T14:00:00Z",
     notes: ["Very interested in our services", "Requested a demo"],
+    crm_type: "real-estate",
   },
   {
     id: "L1008",
@@ -154,6 +161,7 @@ export const leads: Lead[] = [
     lastContact: "2023-09-26T13:45:00Z",
     followUp: "2023-10-03T15:15:00Z",
     notes: ["Discussed business needs", "Needs time to think about options"],
+    crm_type: "insurance",
   },
 ];
 
