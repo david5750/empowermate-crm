@@ -3,17 +3,20 @@ import React, { useState, useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import { fetchLeads } from "@/services/leadService";
-import { useAuth } from "@/contexts/AuthContext";
-import { Lead, formatDate } from "@/utils/mockData";
+import { Client, Comment, formatDate } from "@/utils/mockData";
 import { Button } from "@/components/shared/Button";
-import { Phone, Mail, ChevronRight } from "lucide-react";
+import { Phone, Mail, ChevronRight, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import { fetchClients, mockClients } from "@/services/clientService";
+import { useAuth } from "@/contexts/AuthContext";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
-// We'll reuse leads but only show the converted ones as clients
 const Clients = () => {
-  const [clients, setClients] = useState<Lead[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [newComment, setNewComment] = useState("");
   const { user } = useAuth();
 
   useEffect(() => {
@@ -21,13 +24,14 @@ const Clients = () => {
       if (user?.crm_type) {
         setIsLoading(true);
         try {
-          const data = await fetchLeads(user.crm_type);
-          // Filter only converted leads - these are our clients
-          const convertedLeads = data.filter(lead => lead.status === "converted");
-          setClients(convertedLeads);
+          const data = await fetchClients(user.crm_type);
+          setClients(data);
         } catch (error) {
           console.error("Failed to load clients:", error);
           toast.error("Failed to load clients");
+          // Fallback to mock data
+          const filteredClients = mockClients.filter(client => client.crm_type === user.crm_type);
+          setClients(filteredClients);
         } finally {
           setIsLoading(false);
         }
@@ -36,6 +40,33 @@ const Clients = () => {
 
     loadClients();
   }, [user]);
+
+  const handleAddComment = () => {
+    if (!selectedClient || !newComment.trim()) return;
+
+    const newCommentObj: Comment = {
+      id: `comment-${Date.now()}`,
+      date: new Date().toISOString(),
+      content: newComment.trim(),
+      author: user?.first_name || "User"
+    };
+
+    // Update the local state with the new comment
+    const updatedClients = clients.map(client => {
+      if (client.id === selectedClient.id) {
+        const updatedClient = {
+          ...client,
+          comments: [...(client.comments || []), newCommentObj]
+        };
+        return updatedClient;
+      }
+      return client;
+    });
+
+    setClients(updatedClients);
+    setNewComment("");
+    toast.success("Comment added successfully");
+  };
 
   return (
     <Layout>
@@ -98,6 +129,55 @@ const Clients = () => {
                           <Mail className="h-3.5 w-3.5 mr-1" />
                           Contact
                         </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setSelectedClient(client)}
+                            >
+                              <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                              Comments
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="sm:max-w-[625px]">
+                            <DialogHeader>
+                              <DialogTitle>Client Comments - {selectedClient?.name}</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                              <div className="max-h-[300px] overflow-y-auto space-y-4">
+                                {selectedClient?.comments && selectedClient.comments.length > 0 ? (
+                                  selectedClient.comments.map((comment) => (
+                                    <div key={comment.id} className="border rounded-md p-3">
+                                      <div className="flex justify-between items-center mb-2">
+                                        <div className="font-medium">{comment.author}</div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {formatDate(comment.date)}
+                                        </div>
+                                      </div>
+                                      <p className="text-sm">{comment.content}</p>
+                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-center text-muted-foreground">
+                                    No comments yet.
+                                  </div>
+                                )}
+                              </div>
+                              <div className="space-y-2">
+                                <Textarea
+                                  value={newComment}
+                                  onChange={(e) => setNewComment(e.target.value)}
+                                  placeholder="Add a new comment..."
+                                  className="min-h-[100px]"
+                                />
+                                <Button onClick={handleAddComment} disabled={!newComment.trim()}>
+                                  Add Comment
+                                </Button>
+                              </div>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                         <Button variant="ghost" size="sm">
                           <ChevronRight className="h-4 w-4" />
                         </Button>

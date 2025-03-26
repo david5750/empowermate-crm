@@ -1,3 +1,10 @@
+export type Comment = {
+  id: string;
+  date: string;
+  content: string;
+  author: string;
+};
+
 export type Lead = {
   id: string;
   name: string;
@@ -11,12 +18,14 @@ export type Lead = {
   lastContact: string;
   followUp: string | null;
   notes: string[];
-  crm_type: string; // Added this property
+  crm_type: string;
+  comments?: Comment[];
 };
 
 export type Client = Lead & {
   company?: string;
   value: number;
+  comments?: Comment[];
 };
 
 export type Employee = {
@@ -41,7 +50,7 @@ export type Call = {
   notes: string;
 };
 
-// Generate mock leads
+// Generate mock leads with comments
 export const leads: Lead[] = [
   {
     id: "L1001",
@@ -56,7 +65,21 @@ export const leads: Lead[] = [
     lastContact: "2023-09-20T14:15:00Z",
     followUp: "2023-10-05T11:00:00Z",
     notes: ["Interested in premium package", "Requested brochure"],
-    crm_type: "real-estate",
+    crm_type: "export-import",
+    comments: [
+      {
+        id: "C1",
+        date: "2023-09-15T10:35:00Z",
+        content: "Initial call went well. Customer is interested in our premium packages.",
+        author: "Alex Thompson"
+      },
+      {
+        id: "C2",
+        date: "2023-09-20T14:20:00Z",
+        content: "Sent brochure as requested. Follow-up scheduled for Oct 5.",
+        author: "Alex Thompson"
+      }
+    ]
   },
   {
     id: "L1002",
@@ -71,7 +94,15 @@ export const leads: Lead[] = [
     lastContact: "2023-09-22T16:30:00Z",
     followUp: "2023-10-01T10:00:00Z",
     notes: ["Referred by John Smith", "Call back next week"],
-    crm_type: "insurance",
+    crm_type: "gold-silver",
+    comments: [
+      {
+        id: "C3",
+        date: "2023-09-17T09:50:00Z",
+        content: "Lead came through referral from John Smith. Seems promising.",
+        author: "Jessica Williams"
+      }
+    ]
   },
   {
     id: "L1003",
@@ -87,6 +118,7 @@ export const leads: Lead[] = [
     followUp: null,
     notes: ["Busy when called", "Try again in the afternoon"],
     crm_type: "real-estate",
+    comments: []
   },
   {
     id: "L1004",
@@ -101,7 +133,15 @@ export const leads: Lead[] = [
     lastContact: "2023-09-23T10:20:00Z",
     followUp: null,
     notes: ["Not interested at this time", "Check back in 3 months"],
-    crm_type: "insurance",
+    crm_type: "clock-stock",
+    comments: [
+      {
+        id: "C4",
+        date: "2023-09-23T10:25:00Z",
+        content: "Customer is not interested right now. Will check back in 3 months when their current contract expires.",
+        author: "Ryan Johnson"
+      }
+    ]
   },
   {
     id: "L1005",
@@ -116,56 +156,18 @@ export const leads: Lead[] = [
     lastContact: "2023-09-25T15:45:00Z",
     followUp: null,
     notes: ["Successfully converted to client", "Purchased premium package"],
-    crm_type: "real-estate",
-  },
-  {
-    id: "L1006",
-    name: "Jennifer Lee",
-    phone: "+1 (555) 678-9012",
-    email: "jennifer.lee@example.com",
-    address: "987 Cedar Ln, Seattle, WA",
-    type: "individual",
-    status: "pending",
-    assignedTo: "E1001",
-    createdAt: "2023-09-20T16:45:00Z",
-    lastContact: "2023-09-20T16:45:00Z",
-    followUp: "2023-10-02T13:30:00Z",
-    notes: ["Initial contact made", "Scheduled follow-up call"],
-    crm_type: "insurance",
-  },
-  {
-    id: "L1007",
-    name: "David Clark",
-    phone: "+1 (555) 789-0123",
-    email: "david.clark@example.com",
-    address: "246 Elm St, Denver, CO",
-    type: "referral",
-    status: "answered",
-    assignedTo: "E1003",
-    createdAt: "2023-09-21T10:00:00Z",
-    lastContact: "2023-09-24T11:30:00Z",
-    followUp: "2023-10-10T14:00:00Z",
-    notes: ["Very interested in our services", "Requested a demo"],
-    crm_type: "real-estate",
-  },
-  {
-    id: "L1008",
-    name: "Lisa Martinez",
-    phone: "+1 (555) 890-1234",
-    email: "lisa.martinez@example.com",
-    address: "753 Birch Ave, Miami, FL",
-    type: "business",
-    status: "call-later",
-    assignedTo: "E1002",
-    createdAt: "2023-09-22T09:15:00Z",
-    lastContact: "2023-09-26T13:45:00Z",
-    followUp: "2023-10-03T15:15:00Z",
-    notes: ["Discussed business needs", "Needs time to think about options"],
-    crm_type: "insurance",
-  },
+    crm_type: "visiting-book",
+    comments: [
+      {
+        id: "C5",
+        date: "2023-09-25T15:50:00Z",
+        content: "Successfully converted! Purchased our premium package. Great addition to our client base.",
+        author: "Jessica Williams"
+      }
+    ]
+  }
 ];
 
-// Generate mock employees
 export const employees: Employee[] = [
   {
     id: "E1001",
@@ -202,7 +204,6 @@ export const employees: Employee[] = [
   },
 ];
 
-// Generate mock calls
 export const calls: Call[] = [
   {
     id: "C1001",
@@ -251,7 +252,6 @@ export const calls: Call[] = [
   },
 ];
 
-// Performance metrics
 export const performanceData = [
   { name: "Mon", calls: 12, leads: 3, conversions: 1 },
   { name: "Tue", calls: 18, leads: 5, conversions: 2 },
@@ -262,7 +262,6 @@ export const performanceData = [
   { name: "Sun", calls: 5, leads: 1, conversions: 0 },
 ];
 
-// Lead sources
 export const leadSources = [
   { name: "Website", value: 35 },
   { name: "Referral", value: 25 },
@@ -271,7 +270,6 @@ export const leadSources = [
   { name: "Other", value: 5 },
 ];
 
-// Lead status distribution
 export const leadStatusDistribution = [
   { name: "Answered", value: 30 },
   { name: "Busy", value: 15 },

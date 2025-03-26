@@ -1,13 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { Button } from "../shared/Button";
 import { StatusBadge } from "../shared/StatusBadge";
-import { formatDate, Lead } from "@/utils/mockData";
-import { ChevronLeft, ChevronRight, Download, Filter, Phone, Plus, Search } from "lucide-react";
+import { Comment, formatDate, Lead } from "@/utils/mockData";
+import { ChevronLeft, ChevronRight, Download, Filter, MessageCircle, Phone, Plus, Search } from "lucide-react";
 import { LeadCard } from "./LeadCard";
 import { fetchLeads } from "@/services/leadService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { NewLeadForm } from "./NewLeadForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 export const LeadTable = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -17,6 +20,8 @@ export const LeadTable = () => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [newComment, setNewComment] = useState("");
   const { user } = useAuth();
   
   const itemsPerPage = 10;
@@ -41,6 +46,42 @@ export const LeadTable = () => {
     loadLeads();
   }, [user]);
   
+  // Handle adding a comment to a lead
+  const handleAddComment = () => {
+    if (!selectedLead || !newComment.trim()) return;
+
+    const newCommentObj: Comment = {
+      id: `comment-${Date.now()}`,
+      date: new Date().toISOString(),
+      content: newComment.trim(),
+      author: user?.first_name || "User"
+    };
+
+    // Update the local state with the new comment
+    const updatedLeads = leads.map(lead => {
+      if (lead.id === selectedLead.id) {
+        const updatedLead = {
+          ...lead,
+          comments: [...(lead.comments || []), newCommentObj]
+        };
+        return updatedLead;
+      }
+      return lead;
+    });
+
+    setLeads(updatedLeads);
+    setNewComment("");
+    toast.success("Comment added successfully");
+  };
+
+  // Function to update a lead in the state (used by LeadCard component)
+  const updateLead = (updatedLead: Lead) => {
+    const updatedLeads = leads.map(lead => 
+      lead.id === updatedLead.id ? updatedLead : lead
+    );
+    setLeads(updatedLeads);
+  };
+
   // Filter leads based on search query and active filters
   const filteredLeads = leads.filter((lead) => {
     const matchesSearch = lead.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -221,6 +262,55 @@ export const LeadTable = () => {
                               <Phone className="h-3.5 w-3.5 mr-1" />
                               Call
                             </Button>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm"
+                                  onClick={() => setSelectedLead(lead)}
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                  Comments
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent className="sm:max-w-[625px]">
+                                <DialogHeader>
+                                  <DialogTitle>Lead Comments - {selectedLead?.name}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                  <div className="max-h-[300px] overflow-y-auto space-y-4">
+                                    {selectedLead?.comments && selectedLead.comments.length > 0 ? (
+                                      selectedLead.comments.map((comment) => (
+                                        <div key={comment.id} className="border rounded-md p-3">
+                                          <div className="flex justify-between items-center mb-2">
+                                            <div className="font-medium">{comment.author}</div>
+                                            <div className="text-xs text-muted-foreground">
+                                              {formatDate(comment.date)}
+                                            </div>
+                                          </div>
+                                          <p className="text-sm">{comment.content}</p>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div className="text-center text-muted-foreground">
+                                        No comments yet.
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Textarea
+                                      value={newComment}
+                                      onChange={(e) => setNewComment(e.target.value)}
+                                      placeholder="Add a new comment..."
+                                      className="min-h-[100px]"
+                                    />
+                                    <Button onClick={handleAddComment} disabled={!newComment.trim()}>
+                                      Add Comment
+                                    </Button>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                             <Button variant="ghost" size="sm">
                               <ChevronRight className="h-4 w-4" />
                             </Button>
@@ -260,7 +350,11 @@ export const LeadTable = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {paginatedLeads.map((lead) => (
-                <LeadCard key={lead.id} lead={lead} />
+                <LeadCard 
+                  key={lead.id} 
+                  lead={lead}
+                  onUpdateLead={updateLead}
+                />
               ))}
               
               {/* Pagination for card view */}
