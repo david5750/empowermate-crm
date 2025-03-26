@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Button } from "../shared/Button";
 import { StatusBadge } from "../shared/StatusBadge";
@@ -8,6 +7,7 @@ import { LeadCard } from "./LeadCard";
 import { fetchLeads } from "@/services/leadService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { NewLeadForm } from "./NewLeadForm";
 
 export const LeadTable = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -16,27 +16,28 @@ export const LeadTable = () => {
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const { user } = useAuth();
   
   const itemsPerPage = 10;
 
   // Fetch leads from the database
-  useEffect(() => {
-    const loadLeads = async () => {
-      if (user?.crm_type) {
-        setIsLoading(true);
-        try {
-          const data = await fetchLeads(user.crm_type);
-          setLeads(data);
-        } catch (error) {
-          console.error("Failed to load leads:", error);
-          toast.error("Failed to load leads");
-        } finally {
-          setIsLoading(false);
-        }
+  const loadLeads = async () => {
+    if (user?.crm_type) {
+      setIsLoading(true);
+      try {
+        const data = await fetchLeads(user.crm_type);
+        setLeads(data);
+      } catch (error) {
+        console.error("Failed to load leads:", error);
+        toast.error("Failed to load leads");
+      } finally {
+        setIsLoading(false);
       }
-    };
+    }
+  };
 
+  useEffect(() => {
     loadLeads();
   }, [user]);
   
@@ -74,7 +75,15 @@ export const LeadTable = () => {
   
   return (
     <div className="space-y-4">
-      {isLoading ? (
+      {showNewLeadForm ? (
+        <NewLeadForm 
+          onClose={() => setShowNewLeadForm(false)} 
+          onSuccess={() => {
+            setShowNewLeadForm(false);
+            loadLeads();
+          }} 
+        />
+      ) : isLoading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
@@ -120,7 +129,7 @@ export const LeadTable = () => {
                 Export
               </Button>
               
-              <Button size="sm">
+              <Button size="sm" onClick={() => setShowNewLeadForm(true)}>
                 <Plus className="h-4 w-4 mr-1" />
                 New Lead
               </Button>

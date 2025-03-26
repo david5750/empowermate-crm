@@ -8,6 +8,8 @@ import { useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leads from "./pages/Leads";
+import Clients from "./pages/Clients";
+import Calls from "./pages/Calls";
 import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
 import SelectCrm from "./pages/SelectCrm";
@@ -36,6 +38,14 @@ const AppRoutes = () => {
       <Route 
         path="/leads" 
         element={<PrivateRoute><Leads /></PrivateRoute>} 
+      />
+      <Route 
+        path="/clients" 
+        element={<PrivateRoute><Clients /></PrivateRoute>} 
+      />
+      <Route 
+        path="/calls" 
+        element={<PrivateRoute><Calls /></PrivateRoute>} 
       />
       <Route 
         path="/reports" 
