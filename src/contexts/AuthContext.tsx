@@ -62,13 +62,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      console.log("Attempting login with:", email, "and selected CRM:", selectedCrmType);
+      // Convert email to lowercase for case-insensitive matching
+      const normalizedEmail = email.toLowerCase().trim();
+      const normalizedCrmType = selectedCrmType.toLowerCase().trim();
+      
+      console.log("Attempting login with:", normalizedEmail, "and selected CRM:", normalizedCrmType);
 
-      // Query the users table directly using maybeSingle instead of single
+      // First get all users to debug the issue
+      const { data: allUsers, error: allUsersError } = await supabase
+        .from("users")
+        .select("*");
+        
+      console.log("All users in database:", allUsers, allUsersError);
+
+      // Then try to find the specific user
       const { data, error } = await supabase
         .from("users")
         .select("*")
-        .eq("email", email)
+        .eq("email", normalizedEmail)
         .maybeSingle();
 
       console.log("Login query result:", data, error);
@@ -96,8 +107,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      // Check if the user's CRM type matches the selected one
-      if (data.crm_type !== selectedCrmType) {
+      // Log the user's CRM type and the selected one for comparison
+      console.log("User's CRM type:", data.crm_type, "Selected CRM type:", normalizedCrmType);
+      
+      // Case-insensitive comparison of CRM types
+      if (data.crm_type.toLowerCase().trim() !== normalizedCrmType) {
         return { 
           success: false, 
           message: `You don't have access to the ${selectedCrmType.replace('-', '/')} CRM` 
