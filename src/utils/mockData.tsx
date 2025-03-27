@@ -40,17 +40,17 @@ export type Employee = {
   performance: number; // Percentage
 };
 
-export type Call = {
+export interface Call {
   id: string;
-  leadId: string;
-  employeeId: string;
   date: string;
-  duration: number; // in seconds
-  status: "answered" | "busy" | "not-interested" | "call-later";
-  notes: string;
-};
+  duration: number;
+  status: "answered" | "missed" | "busy" | "completed";
+  notes?: string[];
+  leadId?: string;
+  clientId?: string;
+  employeeId: string;
+}
 
-// Generate mock leads with comments
 export const leads: Lead[] = [
   {
     id: "L1001",
@@ -206,50 +206,92 @@ export const employees: Employee[] = [
 
 export const calls: Call[] = [
   {
-    id: "C1001",
+    id: "call1",
+    date: "2023-09-25T09:15:00Z",
+    duration: 125,
+    status: "completed",
+    notes: ["Discussed project requirements", "Will send proposal next week"],
     leadId: "L1001",
-    employeeId: "E1001",
-    date: "2023-09-20T14:15:00Z",
-    duration: 325, // 5:25 minutes
-    status: "answered",
-    notes: "Client expressed interest in our premium package. Scheduled follow-up.",
+    employeeId: "E1001"
   },
   {
-    id: "C1002",
+    id: "call2",
+    date: "2023-09-24T14:30:00Z",
+    duration: 0,
+    status: "missed",
     leadId: "L1002",
-    employeeId: "E1002",
-    date: "2023-09-22T16:30:00Z",
-    duration: 180, // 3:00 minutes
-    status: "call-later",
-    notes: "Client was in a meeting. Asked to call back next week.",
+    employeeId: "E1002"
   },
   {
-    id: "C1003",
+    id: "call3",
+    date: "2023-09-23T11:00:00Z",
+    duration: 45,
+    status: "completed",
+    notes: ["Lead interested in premium package"],
     leadId: "L1003",
-    employeeId: "E1001",
-    date: "2023-09-18T11:00:00Z",
-    duration: 15, // 0:15 seconds
+    employeeId: "E1003"
+  },
+  {
+    id: "call4",
+    date: "2023-09-22T16:45:00Z",
+    duration: 0,
     status: "busy",
-    notes: "Line was busy. Will try again later.",
-  },
-  {
-    id: "C1004",
     leadId: "L1004",
-    employeeId: "E1003",
-    date: "2023-09-23T10:20:00Z",
-    duration: 210, // 3:30 minutes
-    status: "not-interested",
-    notes: "Client is not interested at this time. Check back in 3 months.",
+    employeeId: "E1001"
   },
   {
-    id: "C1005",
+    id: "call5",
+    date: "2023-09-21T10:30:00Z",
+    duration: 180,
+    status: "completed",
+    notes: ["Detailed discussion about requirements", "Will schedule follow-up meeting"],
     leadId: "L1005",
-    employeeId: "E1002",
-    date: "2023-09-25T15:45:00Z",
-    duration: 540, // 9:00 minutes
-    status: "answered",
-    notes: "Successfully converted to client. Purchased premium package.",
+    employeeId: "E1002"
   },
+  {
+    id: "call6",
+    date: "2023-09-20T13:15:00Z",
+    duration: 210,
+    status: "completed",
+    notes: ["Regular check-in", "Client satisfied with progress"],
+    clientId: "C1001",
+    employeeId: "E1003"
+  },
+  {
+    id: "call7",
+    date: "2023-09-19T15:45:00Z",
+    duration: 150,
+    status: "completed",
+    notes: ["Discussed renewal options", "Client considering upgrade"],
+    clientId: "C1002",
+    employeeId: "E1001"
+  },
+  {
+    id: "call8",
+    date: "2023-09-18T09:30:00Z",
+    duration: 0,
+    status: "missed",
+    clientId: "C1003",
+    employeeId: "E1002"
+  },
+  {
+    id: "call9",
+    date: "2023-09-17T16:00:00Z",
+    duration: 90,
+    status: "completed",
+    notes: ["Addressed client concerns", "Scheduled on-site visit"],
+    clientId: "C1004",
+    employeeId: "E1003"
+  },
+  {
+    id: "call10",
+    date: "2023-09-16T11:30:00Z",
+    duration: 120,
+    status: "completed",
+    notes: ["Quarterly review", "Client expanding contract"],
+    clientId: "C1005",
+    employeeId: "E1001"
+  }
 ];
 
 export const performanceData = [

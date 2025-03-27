@@ -1,48 +1,7 @@
 
-import { supabase } from "@/integrations/supabase/client";
-import { Client } from "@/utils/mockData";
+import { Client, Comment } from "@/utils/mockData";
 
-// Fetch clients for the current user's CRM type
-export const fetchClients = async (crmType: string): Promise<Client[]> => {
-  try {
-    const { data, error } = await supabase
-      .from("clients")
-      .select("*")
-      .eq("crm_type", crmType);
-    
-    if (error) {
-      console.error("Error fetching clients:", error);
-      throw error;
-    }
-    
-    // Transform the database clients to match the Client type
-    const transformedClients: Client[] = data.map(client => ({
-      id: client.id,
-      name: client.name,
-      phone: client.phone,
-      email: client.email,
-      address: client.address,
-      type: client.type as "individual" | "business" | "referral",
-      status: "converted",
-      assignedTo: client.assigned_to,
-      createdAt: client.created_at,
-      lastContact: client.last_contact,
-      followUp: client.follow_up,
-      notes: client.notes,
-      crm_type: client.crm_type,
-      company: client.company,
-      value: client.value
-    }));
-    
-    return transformedClients;
-  } catch (error) {
-    console.error("Failed to fetch clients:", error);
-    // Return static client data as fallback
-    return mockClients.filter(client => client.crm_type === crmType);
-  }
-};
-
-// Static mock clients data
+// Static mock clients data with comments
 export const mockClients: Client[] = [
   {
     id: "C1001",
@@ -59,7 +18,21 @@ export const mockClients: Client[] = [
     notes: ["Successfully converted to client", "Purchased premium package"],
     crm_type: "export-import",
     company: "Wilson Enterprises",
-    value: 15000
+    value: 15000,
+    comments: [
+      {
+        id: "comment-1001",
+        date: "2023-09-18T10:30:00Z",
+        content: "Initial meeting went well. Client is interested in our premium package.",
+        author: "Alex Export"
+      },
+      {
+        id: "comment-1002",
+        date: "2023-09-22T14:15:00Z",
+        content: "Follow-up call completed. Client confirmed interest in proceeding.",
+        author: "Sarah Manager"
+      }
+    ]
   },
   {
     id: "C1002",
@@ -76,7 +49,15 @@ export const mockClients: Client[] = [
     notes: ["Converted after demo", "Very satisfied with service"],
     crm_type: "gold-silver",
     company: "Taylor Solutions",
-    value: 12000
+    value: 12000,
+    comments: [
+      {
+        id: "comment-2001",
+        date: "2023-08-25T09:00:00Z",
+        content: "Client requested more information about our gold-tier services.",
+        author: "John Gold"
+      }
+    ]
   },
   {
     id: "C1003",
@@ -93,7 +74,27 @@ export const mockClients: Client[] = [
     notes: ["Premium subscription", "Has recommended us to others"],
     crm_type: "clock-stock",
     company: "Rodriguez Consulting",
-    value: 25000
+    value: 25000,
+    comments: [
+      {
+        id: "comment-3001",
+        date: "2023-07-15T11:30:00Z",
+        content: "Client has extensive needs. We should prepare a comprehensive proposal.",
+        author: "Chris Time"
+      },
+      {
+        id: "comment-3002",
+        date: "2023-08-05T10:15:00Z",
+        content: "Proposal accepted with minor modifications. Contract sent for signature.",
+        author: "Chris Time"
+      },
+      {
+        id: "comment-3003",
+        date: "2023-09-01T14:45:00Z",
+        content: "Contract signed. Implementation phase beginning next week.",
+        author: "Chris Time"
+      }
+    ]
   },
   {
     id: "C1004",
@@ -110,7 +111,15 @@ export const mockClients: Client[] = [
     notes: ["Purchased full package", "Looking to expand services"],
     crm_type: "visiting-book",
     company: null,
-    value: 8500
+    value: 8500,
+    comments: [
+      {
+        id: "comment-4001",
+        date: "2023-08-10T09:30:00Z",
+        content: "Client is very detail-oriented. Ensure all documentation is thorough.",
+        author: "Visitor Rep"
+      }
+    ]
   },
   {
     id: "C1005",
@@ -127,6 +136,26 @@ export const mockClients: Client[] = [
     notes: ["Converted from referral", "High-value client"],
     crm_type: "export-import",
     company: "Johnson Industries",
-    value: 30000
+    value: 30000,
+    comments: [
+      {
+        id: "comment-5001",
+        date: "2023-09-05T14:00:00Z",
+        content: "Client has international shipping needs. Ensure compliance with all regulations.",
+        author: "Alex Export"
+      },
+      {
+        id: "comment-5002",
+        date: "2023-09-15T11:45:00Z",
+        content: "All documentation approved. First shipment scheduled for next month.",
+        author: "Alex Export"
+      }
+    ]
   }
 ];
+
+// Fetch clients for the current user's CRM type
+export const fetchClients = async (crmType: string): Promise<Client[]> => {
+  // Filter clients by CRM type from our static data
+  return mockClients.filter(client => client.crm_type === crmType);
+};

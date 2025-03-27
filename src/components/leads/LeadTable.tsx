@@ -3,14 +3,16 @@ import React, { useState, useEffect } from "react";
 import { Button } from "../shared/Button";
 import { StatusBadge } from "../shared/StatusBadge";
 import { Comment, formatDate, Lead } from "@/utils/mockData";
-import { ChevronLeft, ChevronRight, Download, Filter, MessageCircle, Phone, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Filter, MessageCircle, Phone, Plus, Search, Eye, UserCheck } from "lucide-react";
 import { LeadCard } from "./LeadCard";
-import { fetchLeads } from "@/services/leadService";
+import { fetchLeads, convertLeadToClient, mockLeads } from "@/services/leadService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { NewLeadForm } from "./NewLeadForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { LeadDetail } from "./LeadDetail";
+import { useNavigate } from "react-router-dom";
 
 export const LeadTable = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
@@ -22,11 +24,13 @@ export const LeadTable = () => {
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [newComment, setNewComment] = useState("");
+  const [showDetailSheet, setShowDetailSheet] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
   
   const itemsPerPage = 10;
 
-  // Fetch leads from the database
+  // Fetch leads from static data
   const loadLeads = async () => {
     if (user?.crm_type) {
       setIsLoading(true);
@@ -36,6 +40,9 @@ export const LeadTable = () => {
       } catch (error) {
         console.error("Failed to load leads:", error);
         toast.error("Failed to load leads");
+        // Fallback to mock leads
+        const filteredLeads = mockLeads.filter(lead => lead.crm_type === user.crm_type);
+        setLeads(filteredLeads);
       } finally {
         setIsLoading(false);
       }
@@ -80,6 +87,27 @@ export const LeadTable = () => {
       lead.id === updatedLead.id ? updatedLead : lead
     );
     setLeads(updatedLeads);
+  };
+
+  // Function to handle lead conversion to client
+  const handleConvertToClient = async (lead: Lead) => {
+    try {
+      await convertLeadToClient(lead);
+      
+      // Remove the lead from the list (in a real app, this would update the lead status)
+      const updatedLeads = leads.filter(l => l.id !== lead.id);
+      setLeads(updatedLeads);
+      
+      toast.success("Lead converted to client successfully");
+      
+      // Optionally navigate to the clients page
+      setTimeout(() => {
+        navigate("/clients");
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to convert lead:", error);
+      toast.error("Failed to convert lead");
+    }
   };
 
   // Filter leads based on search query and active filters
@@ -245,7 +273,17 @@ export const LeadTable = () => {
                         className="border-b hover:bg-muted/50 transition-colors"
                       >
                         <td className="px-4 py-3">
-                          <div className="font-medium">{lead.name}</div>
+                          <div className="font-medium">
+                            <button 
+                              onClick={() => {
+                                setSelectedLead(lead);
+                                setShowDetailSheet(true);
+                              }}
+                              className="hover:underline focus:outline-none text-left"
+                            >
+                              {lead.name}
+                            </button>
+                          </div>
                           <div className="text-xs text-muted-foreground">{lead.phone}</div>
                         </td>
                         <td className="px-4 py-3 capitalize">{lead.type}</td>
@@ -311,9 +349,27 @@ export const LeadTable = () => {
                                 </div>
                               </DialogContent>
                             </Dialog>
-                            <Button variant="ghost" size="sm">
-                              <ChevronRight className="h-4 w-4" />
-                            </Button>
+                            <div className="flex space-x-1">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedLead(lead);
+                                  setShowDetailSheet(true);
+                                }}
+                              >
+                                <Eye className="h-3.5 w-3.5 mr-1" />
+                                Details
+                              </Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm"
+                                onClick={() => handleConvertToClient(lead)}
+                              >
+                                <UserCheck className="h-3.5 w-3.5 mr-1" />
+                                Convert
+                              </Button>
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -354,6 +410,7 @@ export const LeadTable = () => {
                   key={lead.id} 
                   lead={lead}
                   onUpdateLead={updateLead}
+                  onConvertToClient={handleConvertToClient}
                 />
               ))}
               
@@ -384,6 +441,16 @@ export const LeadTable = () => {
             </div>
           )}
         </>
+      )}
+
+      {selectedLead && (
+        <LeadDetail
+          lead={selectedLead}
+          open={showDetailSheet}
+          onClose={() => setShowDetailSheet(false)}
+          onUpdate={updateLead}
+          onConvert={() => handleConvertToClient(selectedLead)}
+        />
       )}
     </div>
   );

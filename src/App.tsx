@@ -11,6 +11,7 @@ import Leads from "./pages/Leads";
 import Clients from "./pages/Clients";
 import Calls from "./pages/Calls";
 import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SelectCrm from "./pages/SelectCrm";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -50,6 +51,10 @@ const AppRoutes = () => {
       <Route 
         path="/reports" 
         element={<PrivateRoute><Reports /></PrivateRoute>} 
+      />
+      <Route 
+        path="/settings" 
+        element={<PrivateRoute><Settings /></PrivateRoute>} 
       />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
