@@ -5,7 +5,6 @@ import { StatusBadge } from "../shared/StatusBadge";
 import { Comment, formatDate, Lead } from "@/utils/mockData";
 import { ChevronLeft, ChevronRight, Download, Filter, MessageCircle, Phone, Plus, Search, Eye, UserCheck } from "lucide-react";
 import { LeadCard } from "./LeadCard";
-import { fetchLeads, convertLeadToClient, mockLeads } from "@/services/leadService";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { NewLeadForm } from "./NewLeadForm";
@@ -13,14 +12,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from "@/components/ui/textarea";
 import { LeadDetail } from "./LeadDetail";
 import { useNavigate } from "react-router-dom";
+import { useGetLeadsQuery, useUpdateLeadMutation, useConvertLeadToClientMutation } from "@/store/apis/leadApi";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Status and Source Options
+export const STATUS_OPTIONS = [
+  "interested & add me",
+  "drop an email only",
+  "not interested",
+  "busy/unreachable",
+  "wrong/incorrect number",
+  "did not pick",
+  "disconnected the call",
+  "out of station",
+  "call later",
+  "already taking from other",
+  "not doing exim business",
+  "small business",
+  "leave a comment",
+  "new lead",
+  "in progress"
+];
+
+export const SOURCE_OPTIONS = [
+  "calling",
+  "referral",
+  "sms",
+  "email",
+  "social media",
+  "digital marketing",
+  "other"
+];
 
 export const LeadTable = () => {
   const [viewMode, setViewMode] = useState<"table" | "card">("table");
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showNewLeadForm, setShowNewLeadForm] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [newComment, setNewComment] = useState("");
@@ -30,83 +58,90 @@ export const LeadTable = () => {
   
   const itemsPerPage = 10;
 
-  // Fetch leads from static data
-  const loadLeads = async () => {
-    if (user?.crm_type) {
-      setIsLoading(true);
-      try {
-        const data = await fetchLeads(user.crm_type);
-        setLeads(data);
-      } catch (error) {
-        console.error("Failed to load leads:", error);
-        toast.error("Failed to load leads");
-        // Fallback to mock leads
-        const filteredLeads = mockLeads.filter(lead => lead.crm_type === user.crm_type);
-        setLeads(filteredLeads);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  };
+  // Use RTK Query hooks
+  const { data: leads = [], isLoading, refetch } = useGetLeadsQuery({ 
+    crm_type: user?.crm_type
+  });
 
-  useEffect(() => {
-    loadLeads();
-  }, [user]);
-  
+  const [updateLead] = useUpdateLeadMutation();
+  const [convertToClient] = useConvertLeadToClientMutation();
+
   // Handle adding a comment to a lead
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!selectedLead || !newComment.trim()) return;
 
-    const newCommentObj: Comment = {
-      id: `comment-${Date.now()}`,
-      date: new Date().toISOString(),
-      content: newComment.trim(),
-      author: user?.first_name || "User"
-    };
-
-    // Update the local state with the new comment
-    const updatedLeads = leads.map(lead => {
-      if (lead.id === selectedLead.id) {
-        const updatedLead = {
-          ...lead,
-          comments: [...(lead.comments || []), newCommentObj]
-        };
-        return updatedLead;
-      }
-      return lead;
-    });
-
-    setLeads(updatedLeads);
-    setNewComment("");
-    toast.success("Comment added successfully");
-  };
-
-  // Function to update a lead in the state (used by LeadCard component)
-  const updateLead = (updatedLead: Lead) => {
-    const updatedLeads = leads.map(lead => 
-      lead.id === updatedLead.id ? updatedLead : lead
-    );
-    setLeads(updatedLeads);
+    try {
+      await updateLead({
+        id: selectedLead.id,
+        data: {
+          comments: [
+            ...(selectedLead.comments || []),
+            {
+              id: `comment-${Date.now()}`,
+              date: new Date().toISOString(),
+              content: newComment.trim(),
+              author: user?.first_name || "User"
+            }
+          ]
+        }
+      }).unwrap();
+      
+      setNewComment("");
+      toast.success("Comment added successfully");
+      refetch();
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      toast.error("Failed to add comment");
+    }
   };
 
   // Function to handle lead conversion to client
   const handleConvertToClient = async (lead: Lead) => {
     try {
-      await convertLeadToClient(lead);
-      
-      // Remove the lead from the list (in a real app, this would update the lead status)
-      const updatedLeads = leads.filter(l => l.id !== lead.id);
-      setLeads(updatedLeads);
-      
+      await convertToClient(lead.id).unwrap();
       toast.success("Lead converted to client successfully");
       
       // Optionally navigate to the clients page
       setTimeout(() => {
         navigate("/clients");
       }, 1500);
+      
+      refetch();
     } catch (error) {
       console.error("Failed to convert lead:", error);
       toast.error("Failed to convert lead");
+    }
+  };
+
+  // Function to update lead status
+  const handleStatusChange = async (leadId: string, status: string) => {
+    try {
+      await updateLead({
+        id: leadId,
+        data: { status }
+      }).unwrap();
+      
+      toast.success("Lead status updated successfully");
+      refetch();
+    } catch (error) {
+      console.error("Failed to update lead status:", error);
+      toast.error("Failed to update lead status");
+    }
+  };
+
+  // Function to update lead source
+  const handleSourceChange = async (leadId: string, source: string) => {
+    try {
+      await updateLead({
+        id: leadId,
+        data: { type: source }
+      }).unwrap();
+      
+      toast.success("Lead source updated successfully");
+      refetch();
+    } catch (error) {
+      console.error("Failed to update lead source:", error);
+      toast.error("Failed to update lead source");
     }
   };
 
@@ -139,9 +174,6 @@ export const LeadTable = () => {
     setCurrentPage(1); // Reset to first page when filter changes
   };
   
-  const statusFilters = ["answered", "busy", "not-interested", "call-later", "pending", "converted"];
-  const typeFilters = ["individual", "business", "referral"];
-  
   return (
     <div className="space-y-4">
       {showNewLeadForm ? (
@@ -149,7 +181,7 @@ export const LeadTable = () => {
           onClose={() => setShowNewLeadForm(false)} 
           onSuccess={() => {
             setShowNewLeadForm(false);
-            loadLeads();
+            refetch();
           }} 
         />
       ) : isLoading ? (
@@ -187,10 +219,6 @@ export const LeadTable = () => {
                     </span>
                   )}
                 </Button>
-                
-                {/* Filter dropdown */}
-                {/* Note: This would typically be a proper dropdown component */}
-                {/* For brevity, I've simplified it here */}
               </div>
               
               <Button variant="outline" size="sm">
@@ -259,7 +287,7 @@ export const LeadTable = () => {
                   <thead>
                     <tr className="border-b bg-muted/50">
                       <th className="px-4 py-3 text-left font-medium">Name</th>
-                      <th className="px-4 py-3 text-left font-medium">Type</th>
+                      <th className="px-4 py-3 text-left font-medium">Source</th>
                       <th className="px-4 py-3 text-left font-medium">Status</th>
                       <th className="px-4 py-3 text-left font-medium">Created</th>
                       <th className="px-4 py-3 text-left font-medium">Follow-up</th>
@@ -286,9 +314,35 @@ export const LeadTable = () => {
                           </div>
                           <div className="text-xs text-muted-foreground">{lead.phone}</div>
                         </td>
-                        <td className="px-4 py-3 capitalize">{lead.type}</td>
                         <td className="px-4 py-3">
-                          <StatusBadge status={lead.status} />
+                          <Select
+                            value={lead.type}
+                            onValueChange={(value) => handleSourceChange(lead.id, value)}
+                          >
+                            <SelectTrigger className="w-[180px]">
+                              <SelectValue placeholder="Select source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SOURCE_OPTIONS.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Select
+                            value={lead.status}
+                            onValueChange={(value) => handleStatusChange(lead.id, value)}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Select status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {STATUS_OPTIONS.map(option => (
+                                <SelectItem key={option} value={option}>{option}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </td>
                         <td className="px-4 py-3">{formatDate(lead.createdAt)}</td>
                         <td className="px-4 py-3">
@@ -362,7 +416,7 @@ export const LeadTable = () => {
                                 Details
                               </Button>
                               <Button 
-                                variant="secondary" 
+                                variant="outline" 
                                 size="sm"
                                 onClick={() => handleConvertToClient(lead)}
                               >
@@ -448,7 +502,7 @@ export const LeadTable = () => {
           lead={selectedLead}
           open={showDetailSheet}
           onClose={() => setShowDetailSheet(false)}
-          onUpdate={updateLead}
+          onUpdate={(updatedLead) => refetch()}
           onConvert={() => handleConvertToClient(selectedLead)}
         />
       )}

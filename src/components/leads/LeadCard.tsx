@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { LeadDetail } from "./LeadDetail";
-import { convertLeadToClient } from "@/services/leadService";
+import { useUpdateLeadMutation, useConvertLeadToClientMutation } from "@/store/apis/leadApi";
 
 interface LeadCardProps {
   lead: Lead;
@@ -23,35 +23,44 @@ export const LeadCard = ({ lead, onUpdateLead, onConvertToClient }: LeadCardProp
   const [showDetailSheet, setShowDetailSheet] = useState(false);
   const { user } = useAuth();
 
-  const handleAddComment = () => {
+  const [updateLead] = useUpdateLeadMutation();
+  const [convertToClient] = useConvertLeadToClientMutation();
+
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    const newCommentObj: Comment = {
-      id: `comment-${Date.now()}`,
-      date: new Date().toISOString(),
-      content: newComment.trim(),
-      author: user?.first_name || "User"
-    };
+    try {
+      const newCommentObj: Comment = {
+        id: `comment-${Date.now()}`,
+        date: new Date().toISOString(),
+        content: newComment.trim(),
+        author: user?.first_name || "User"
+      };
 
-    const updatedLead = {
-      ...lead,
-      comments: [...(lead.comments || []), newCommentObj]
-    };
+      const updatedLead = await updateLead({
+        id: lead.id,
+        data: {
+          comments: [...(lead.comments || []), newCommentObj]
+        }
+      }).unwrap();
 
-    if (onUpdateLead) {
-      onUpdateLead(updatedLead);
+      if (onUpdateLead) {
+        onUpdateLead(updatedLead);
+      }
+
+      setNewComment("");
+      toast.success("Comment added successfully");
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      toast.error("Failed to add comment");
     }
-
-    setNewComment("");
-    toast.success("Comment added successfully");
   };
 
   const handleConvertToClient = async () => {
     try {
-      // In a real app, this would convert the lead to a client in the database
-      const client = await convertLeadToClient(lead);
+      await convertToClient(lead.id).unwrap();
       
-      if (client && onConvertToClient) {
+      if (onConvertToClient) {
         onConvertToClient(lead);
         toast.success("Lead converted to client successfully");
       }
@@ -171,7 +180,7 @@ export const LeadCard = ({ lead, onUpdateLead, onConvertToClient }: LeadCardProp
               <Eye className="h-3.5 w-3.5 mr-1" />
               Details
             </Button>
-            <Button size="sm" variant="secondary" onClick={handleConvertToClient}>
+            <Button size="sm" variant="outline" onClick={handleConvertToClient}>
               <UserCheck className="h-3.5 w-3.5 mr-1" />
               Convert
             </Button>

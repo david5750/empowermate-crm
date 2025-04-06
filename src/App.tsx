@@ -2,31 +2,31 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from 'react-redux';
+import { store } from './store';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leads from "./pages/Leads";
 import Clients from "./pages/Clients";
+import DemoClients from "./pages/DemoClients";
 import Calls from "./pages/Calls";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SelectCrm from "./pages/SelectCrm";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-
-const queryClient = new QueryClient();
+import { useAppSelector } from "./hooks/redux";
 
 // Route wrapper that redirects to auth page if not authenticated
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
-  return user ? <>{children}</> : <Navigate to="/auth" />;
+  const { isAuthenticated } = useAppSelector(state => state.auth);
+  return isAuthenticated ? <>{children}</> : <Navigate to="/auth" />;
 };
 
 // App component with routes
 const AppRoutes = () => {
-  const { user } = useAuth();
+  const { user } = useAppSelector(state => state.auth);
 
   return (
     <Routes>
@@ -43,6 +43,10 @@ const AppRoutes = () => {
       <Route 
         path="/clients" 
         element={<PrivateRoute><Clients /></PrivateRoute>} 
+      />
+      <Route 
+        path="/demo-clients" 
+        element={<PrivateRoute><DemoClients /></PrivateRoute>} 
       />
       <Route 
         path="/calls" 
@@ -64,17 +68,15 @@ const AppRoutes = () => {
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
+    <Provider store={store}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
+    </Provider>
   );
 };
 

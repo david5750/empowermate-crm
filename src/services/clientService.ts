@@ -1,7 +1,7 @@
 
 import { Client, Comment } from "@/utils/mockData";
 
-// Static mock clients data with comments
+// Export mock clients data for use in other files
 export const mockClients: Client[] = [
   {
     id: "C1001",
@@ -9,7 +9,7 @@ export const mockClients: Client[] = [
     phone: "+1 (555) 567-8901",
     email: "robert.wilson@example.com",
     address: "654 Maple Dr, Austin, TX",
-    type: "business",
+    type: "calling",
     status: "converted",
     assignedTo: "E1002",
     createdAt: "2023-09-16T14:30:00Z",
@@ -41,7 +41,7 @@ export const mockClients: Client[] = [
     email: "amanda.taylor@example.com",
     address: "852 Pine Dr, Atlanta, GA",
     type: "referral",
-    status: "converted",
+    status: "interested & add me",
     assignedTo: "E1003",
     createdAt: "2023-08-22T09:15:00Z",
     lastContact: "2023-09-15T11:30:00Z",
@@ -65,8 +65,8 @@ export const mockClients: Client[] = [
     phone: "+1 (555) 234-5678",
     email: "thomas.r@example.com",
     address: "123 Oak St, Los Angeles, CA",
-    type: "business",
-    status: "converted",
+    type: "digital marketing",
+    status: "call later",
     assignedTo: "E1001",
     createdAt: "2023-07-12T10:00:00Z",
     lastContact: "2023-09-10T14:15:00Z",
@@ -102,8 +102,8 @@ export const mockClients: Client[] = [
     phone: "+1 (555) 345-6789",
     email: "sophia.chen@example.com",
     address: "456 Elm Ave, San Diego, CA",
-    type: "individual",
-    status: "converted",
+    type: "email",
+    status: "not interested",
     assignedTo: "E1002",
     createdAt: "2023-08-05T11:30:00Z",
     lastContact: "2023-09-20T10:45:00Z",
@@ -127,8 +127,8 @@ export const mockClients: Client[] = [
     phone: "+1 (555) 456-7890",
     email: "marcus.j@example.com",
     address: "789 Pine Rd, Chicago, IL",
-    type: "referral",
-    status: "converted",
+    type: "social media",
+    status: "busy/unreachable",
     assignedTo: "E1003",
     createdAt: "2023-09-01T13:00:00Z",
     lastContact: "2023-09-18T15:30:00Z",
@@ -158,4 +158,25 @@ export const mockClients: Client[] = [
 export const fetchClients = async (crmType: string): Promise<Client[]> => {
   // Filter clients by CRM type from our static data
   return mockClients.filter(client => client.crm_type === crmType);
+};
+
+// Get a single client by ID
+export const fetchClientById = async (id: string): Promise<Client | null> => {
+  const client = mockClients.find(client => client.id === id);
+  return client || null;
+};
+
+// Update an existing client
+export const updateClient = async (id: string, client: Partial<Client>): Promise<Client | null> => {
+  // In a real app, this would update the database
+  const existingClientIndex = mockClients.findIndex(c => c.id === id);
+  if (existingClientIndex === -1) return null;
+  
+  const updatedClient = {
+    ...mockClients[existingClientIndex],
+    ...client
+  };
+  
+  // For demo purposes, we return the updated client
+  return updatedClient;
 };

@@ -1,5 +1,5 @@
 
-import { Lead, Comment } from "@/utils/mockData";
+import { Lead, Client, Comment } from "@/utils/mockData";
 
 // Static mock leads data with comments
 export const mockLeads: Lead[] = [
