@@ -133,7 +133,7 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
 };
 
 // Create a new lead
-export const createLead = async (lead: Omit<Lead, "id" | "createdAt">): Promise<Lead> => {
+export const createLead = async (lead: Omit<Lead, "id" | "createdAt" | "comments">): Promise<Lead> => {
   // In a real app, this would insert into the database
   const newLead: Lead = {
     ...lead,

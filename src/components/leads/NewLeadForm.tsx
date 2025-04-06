@@ -13,16 +13,27 @@ interface NewLeadFormProps {
   onSuccess: () => void;
 }
 
+type LeadFormData = {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+  type: "individual" | "business" | "referral";
+  status: "answered" | "busy" | "not-interested" | "call-later" | "pending" | "converted";
+  assignedTo: string;
+  notes: string[];
+}
+
 export const NewLeadForm = ({ onClose, onSuccess }: NewLeadFormProps) => {
   const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LeadFormData>({
     name: "",
     phone: "",
     email: "",
     address: "",
-    type: "individual" as "individual" | "business" | "referral",
-    status: "pending" as "answered" | "busy" | "not-interested" | "call-later" | "pending" | "converted",
+    type: "individual",
+    status: "pending",
     assignedTo: "E1001", // Default assigned user
     notes: [""] // Initial empty note
   });

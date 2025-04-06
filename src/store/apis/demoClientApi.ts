@@ -64,5 +64,5 @@ export const demoClientApi = createApi({
 export const { 
   useGetDemoClientsQuery,
   useUpdateDemoClientMutation,
-  useAddDemoClientMutation
+  useAddDemoClientCommentMutation
 } = demoClientApi;
