@@ -114,7 +114,7 @@ const Auth = () => {
           </CardContent>
           <CardFooter className="flex justify-center">
             <p className="text-xs text-muted-foreground">
-              For demo: Use email as password (e.g., export@example.com / export@example.com)
+              For demo: Use email as password (e.g., demo1@gmail.com / demo123)
             </p>
           </CardFooter>
         </Card>

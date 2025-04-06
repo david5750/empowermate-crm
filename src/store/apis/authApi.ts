@@ -7,6 +7,7 @@ import { getAccessToken } from '@/utils/cookies';
 interface LoginRequest {
   email: string;
   password: string;
+  crm_type: string;  // Added CRM type parameter
 }
 
 interface User {

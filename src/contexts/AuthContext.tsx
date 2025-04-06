@@ -65,31 +65,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
 
-      // Call the API
-      const response = await loginMutation({ email, password }).unwrap();
+      // Call the API with the selectedCrmType
+      const response = await loginMutation({ 
+        email, 
+        password,
+        crm_type: selectedCrmType 
+      }).unwrap();
       
-      console.log("Login response:", response);
-      
-      // Check if the user's CRM type matches the selected one
-      if (response.user.crm_type.toLowerCase() !== selectedCrmType.toLowerCase()) {
+      // Check if login was successful
+      if (response.user && response.token) {
+        // Store tokens in cookies
+        setTokens(response.token, response.refreshToken);
+        
+        // Store user in Redux state
+        dispatch(setCredentials({
+          user: response.user,
+          token: response.token
+        }));
+        
+        return { 
+          success: true, 
+          message: "Login successful" 
+        };
+      } else {
+        return { 
+          success: false, 
+          message: response.message || "Login failed" 
+        };
+      }
+    } catch (error: any) {
+      console.error("Login error:", error);
+      // Check for specific error about CRM type mismatch
+      if (error.data && error.data.message === "Employee does not belong to the specified CRM type") {
         return { 
           success: false, 
           message: `You don't have access to the ${selectedCrmType.replace('-', '/')} CRM` 
         };
       }
       
-      // Store tokens in cookies
-      setTokens(response.token, response.refreshToken);
-      
-      return { 
-        success: true, 
-        message: "Login successful" 
-      };
-    } catch (error) {
-      console.error("Login error:", error);
       return { 
         success: false, 
-        message: "Invalid email or password" 
+        message: error.data?.message || "Invalid email or password" 
       };
     } finally {
       setIsLoading(false);
