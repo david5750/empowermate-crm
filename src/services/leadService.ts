@@ -133,7 +133,7 @@ export const fetchLeadById = async (id: string): Promise<Lead | null> => {
 };
 
 // Create a new lead
-export const createLead = async (lead: Omit<Lead, "id" | "createdAt">): Promise<Lead | null> => {
+export const createLead = async (lead: Omit<Lead, "id" | "createdAt">): Promise<Lead> => {
   // In a real app, this would insert into the database
   const newLead: Lead = {
     ...lead,
@@ -162,7 +162,7 @@ export const updateLead = async (id: string, lead: Partial<Lead>): Promise<Lead 
 };
 
 // Convert lead to client
-export const convertLeadToClient = async (lead: Lead): Promise<Client | null> => {
+export const convertLeadToClient = async (lead: Lead): Promise<Client> => {
   // In a real app, this would update the lead status and create a new client
   const client: Client = {
     id: `C${Date.now()}`,

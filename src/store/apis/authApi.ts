@@ -7,14 +7,16 @@ interface LoginRequest {
   password: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  crm_type: string;
+}
+
 interface LoginResponse {
-  user: {
-    id: string;
-    email: string;
-    first_name: string;
-    last_name: string;
-    crm_type: string;
-  };
+  user: User;
   token: string;
   message: string;
 }
