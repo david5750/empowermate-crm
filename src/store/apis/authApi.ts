@@ -1,6 +1,8 @@
 
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../index';
+import { API_BASE_URL } from '@/constants/api';
+import { getAccessToken } from '@/utils/cookies';
 
 interface LoginRequest {
   email: string;
@@ -18,14 +20,23 @@ interface User {
 interface LoginResponse {
   user: User;
   token: string;
+  refreshToken?: string;
   message: string;
 }
 
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({ 
-    baseUrl: 'http://localhost:4012/api/v1/auth',
+    baseUrl: `${API_BASE_URL}/auth`,
     prepareHeaders: (headers, { getState }) => {
+      // First try to get the token from cookies
+      const cookieToken = getAccessToken();
+      if (cookieToken) {
+        headers.set('authorization', `Bearer ${cookieToken}`);
+        return headers;
+      }
+      
+      // Fall back to redux state if cookie not available
       const token = (getState() as RootState).auth.token;
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
@@ -41,7 +52,10 @@ export const authApi = createApi({
         body: credentials,
       }),
     }),
+    getMe: builder.query<{ user: User }, void>({
+      query: () => '/me',
+    }),
   }),
 });
 
-export const { useLoginMutation } = authApi;
+export const { useLoginMutation, useGetMeQuery } = authApi;

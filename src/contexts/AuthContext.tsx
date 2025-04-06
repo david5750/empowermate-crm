@@ -1,8 +1,10 @@
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useEffect } from "react";
 import { useAppSelector, useAppDispatch } from "@/hooks/redux";
-import { logout, setSelectedCrmType } from "@/store/slices/authSlice";
+import { logout, setCredentials, setSelectedCrmType } from "@/store/slices/authSlice";
 import { useLoginMutation } from "@/store/apis/authApi";
+import { clientFetcher } from "@/utils/clientFetcher";
+import { setTokens, clearTokens, getAccessToken } from "@/utils/cookies";
 
 type AuthContextType = {
   user: any;
@@ -20,6 +22,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user, selectedCrmType } = useAppSelector(state => state.auth);
   const [isLoading, setIsLoading] = React.useState(false);
   const [loginMutation] = useLoginMutation();
+
+  // Check token validity on mount
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = getAccessToken();
+      if (token && !user) {
+        try {
+          setIsLoading(true);
+          // Call API to verify token and get user info
+          const userData = await clientFetcher('/auth/me');
+          dispatch(setCredentials({
+            user: userData.user,
+            token
+          }));
+        } catch (error) {
+          console.error("Token validation failed:", error);
+          clearTokens();
+          dispatch(logout());
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    validateToken();
+  }, [dispatch, user]);
 
   const handleSetSelectedCrmType = (type: string | null) => {
     dispatch(setSelectedCrmType(type));
@@ -50,6 +78,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       }
       
+      // Store tokens in cookies
+      setTokens(response.token, response.refreshToken);
+      
       return { 
         success: true, 
         message: "Login successful" 
@@ -66,6 +97,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleLogout = async () => {
+    clearTokens();
     dispatch(logout());
   };
 

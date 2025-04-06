@@ -4,8 +4,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useEffect } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Leads from "./pages/Leads";
@@ -16,55 +16,7 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import SelectCrm from "./pages/SelectCrm";
-import { useAppSelector } from "./hooks/redux";
-
-// Route wrapper that redirects to auth page if not authenticated
-const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAppSelector(state => state.auth);
-  return isAuthenticated ? <>{children}</> : <Navigate to="/auth" />;
-};
-
-// App component with routes
-const AppRoutes = () => {
-  const { user } = useAppSelector(state => state.auth);
-
-  return (
-    <Routes>
-      <Route 
-        path="/" 
-        element={user ? <Index /> : <Navigate to="/select-crm" />} 
-      />
-      <Route path="/select-crm" element={<SelectCrm />} />
-      <Route path="/auth" element={<Auth />} />
-      <Route 
-        path="/leads" 
-        element={<PrivateRoute><Leads /></PrivateRoute>} 
-      />
-      <Route 
-        path="/clients" 
-        element={<PrivateRoute><Clients /></PrivateRoute>} 
-      />
-      <Route 
-        path="/demo-clients" 
-        element={<PrivateRoute><DemoClients /></PrivateRoute>} 
-      />
-      <Route 
-        path="/calls" 
-        element={<PrivateRoute><Calls /></PrivateRoute>} 
-      />
-      <Route 
-        path="/reports" 
-        element={<PrivateRoute><Reports /></PrivateRoute>} 
-      />
-      <Route 
-        path="/settings" 
-        element={<PrivateRoute><Settings /></PrivateRoute>} 
-      />
-      {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-};
+import { ProtectedRoute } from "./components/layout/ProtectedRoute";
 
 const App = () => {
   return (
@@ -73,7 +25,91 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AppRoutes />
+          <AuthProvider>
+            <Routes>
+              {/* Protected routes (require authentication) */}
+              <Route 
+                path="/" 
+                element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/leads" 
+                element={
+                  <ProtectedRoute>
+                    <Leads />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/clients" 
+                element={
+                  <ProtectedRoute>
+                    <Clients />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/demo-clients" 
+                element={
+                  <ProtectedRoute>
+                    <DemoClients />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/calls" 
+                element={
+                  <ProtectedRoute>
+                    <Calls />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/reports" 
+                element={
+                  <ProtectedRoute>
+                    <Reports />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/settings" 
+                element={
+                  <ProtectedRoute>
+                    <Settings />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Public routes (no authentication required) */}
+              <Route 
+                path="/select-crm" 
+                element={
+                  <ProtectedRoute requireAuth={false}>
+                    <SelectCrm />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/auth" 
+                element={
+                  <ProtectedRoute requireAuth={false} redirectTo="/">
+                    <Auth />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* 404 catch-all */}
+              <Route 
+                path="*" 
+                element={<NotFound />}
+              />
+            </Routes>
+          </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
     </Provider>

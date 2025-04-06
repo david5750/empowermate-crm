@@ -2,6 +2,8 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { RootState } from '../index';
 import { Lead } from '@/utils/mockData';
+import { API_BASE_URL } from '@/constants/api';
+import { getAccessToken } from '@/utils/cookies';
 
 interface LeadQueryParams {
   crm_type?: string;
@@ -13,8 +15,16 @@ interface LeadQueryParams {
 export const leadApi = createApi({
   reducerPath: 'leadApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:4012/api/v1',
+    baseUrl: API_BASE_URL,
     prepareHeaders: (headers, { getState }) => {
+      // First try to get the token from cookies
+      const cookieToken = getAccessToken();
+      if (cookieToken) {
+        headers.set('authorization', `Bearer ${cookieToken}`);
+        return headers;
+      }
+      
+      // Fall back to redux state if cookie not available
       const token = (getState() as RootState).auth.token;
       if (token) {
         headers.set('authorization', `Bearer ${token}`);
