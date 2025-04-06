@@ -7,10 +7,10 @@ import { getAccessToken } from '@/utils/cookies';
 interface LoginRequest {
   email: string;
   password: string;
-  crm_type: string;  // Added CRM type parameter
+  crm_type: string;
 }
 
-interface User {
+export interface User {
   id: string;
   email: string;
   first_name: string;
@@ -18,9 +18,22 @@ interface User {
   crm_type: string;
 }
 
+export interface DecodedToken {
+  id: string;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  name?: string;
+  crm_type: string;
+  iat: number;
+  exp: number;
+}
+
 interface LoginResponse {
-  user: User;
-  token: string;
+  user?: User;
+  token?: string;
+  access_token?: string;
+  refresh_token?: string;
   refreshToken?: string;
   message: string;
 }

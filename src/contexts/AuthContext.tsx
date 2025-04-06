@@ -4,7 +4,9 @@ import { useAppSelector, useAppDispatch } from "@/hooks/redux";
 import { logout, setCredentials, setSelectedCrmType } from "@/store/slices/authSlice";
 import { useLoginMutation } from "@/store/apis/authApi";
 import { clientFetcher } from "@/utils/clientFetcher";
-import { setTokens, clearTokens, getAccessToken } from "@/utils/cookies";
+import { setTokens, clearTokens, getAccessToken, getRefreshToken } from "@/utils/cookies";
+import jwtDecode from "jwt-decode";
+import { DecodedToken } from "@/store/apis/authApi";
 
 type AuthContextType = {
   user: any;
@@ -27,15 +29,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const validateToken = async () => {
       const token = getAccessToken();
+      const refreshToken = getRefreshToken();
+      
       if (token && !user) {
         try {
           setIsLoading(true);
-          // Call API to verify token and get user info
-          const userData = await clientFetcher('/auth/me');
+          
+          // Decode token to get user info
+          const decodedToken = jwtDecode<DecodedToken>(token);
+          
+          // Set credentials from decoded token
           dispatch(setCredentials({
-            user: userData.user,
-            token
+            decodedToken,
+            token,
+            refreshToken,
           }));
+          
+          // Optionally verify with backend
+          try {
+            const userData = await clientFetcher('/auth/me');
+            if (userData.user) {
+              // Update with fresh user data
+              dispatch(setCredentials({
+                user: userData.user,
+                token,
+                refreshToken,
+              }));
+            }
+          } catch (apiError) {
+            console.log("API validation failed, using decoded token data");
+          }
         } catch (error) {
           console.error("Token validation failed:", error);
           clearTokens();
@@ -72,21 +95,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         crm_type: selectedCrmType 
       }).unwrap();
       
-      // Check if login was successful
-      if (response.user && response.token) {
-        // Store tokens in cookies
-        setTokens(response.token, response.refreshToken);
-        
-        // Store user in Redux state
-        dispatch(setCredentials({
-          user: response.user,
-          token: response.token
-        }));
-        
-        return { 
-          success: true, 
-          message: "Login successful" 
-        };
+      // Check if login was successful and has tokens
+      const accessToken = response.token || response.access_token;
+      const refreshToken = response.refreshToken || response.refresh_token;
+      
+      if (accessToken) {
+        // Decode token to get user information
+        try {
+          const decodedToken = jwtDecode<DecodedToken>(accessToken);
+          
+          // Store tokens in cookies
+          setTokens(accessToken, refreshToken);
+          
+          // Store user data and tokens in Redux state
+          dispatch(setCredentials({
+            decodedToken,
+            token: accessToken,
+            refreshToken
+          }));
+          
+          return { 
+            success: true, 
+            message: "Login successful" 
+          };
+        } catch (decodeError) {
+          console.error("Token decode error:", decodeError);
+          return { 
+            success: false, 
+            message: "Invalid token format" 
+          };
+        }
       } else {
         return { 
           success: false, 
